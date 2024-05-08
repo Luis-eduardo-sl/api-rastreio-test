@@ -1,84 +1,88 @@
 const request = require('supertest')
-const baseUrl = 'http://localhost:3000/deliveries'
+const express = require('express')
 
+const app = express();
+const routes = require('../routes/deliveryRoutes')
+app.use(express.json());
+app.use('/deliveries', routes)
 
-describe('GET /:trackingNumber - Obter informação do rastreio', () => {
-    const newDelivery = {
-        trackingNumber: '10',
-        status: 'Pedido em preparação'
-    }
+describe('/GET DELIVERY', () => {
+const newDelivery = {
+trackingNumber: '10',
+status: 'preparando pedido'
+}
 
-    beforeAll(async () => {
-        await request(baseUrl).post('/').send(newDelivery)
-    })
-
-    afterAll(async () => {
-        await request(baseUrl).delete(`/${newDelivery.trackingNumber}`)
-    })
-
-    it('Deve retornar o delivery 10', async () => {
-        const response = await request(baseUrl).get(`/${newDelivery.trackingNumber}`);
-        expect(response.statusCode).toBe(200)
-        expect(response.body.trackingNumber).toBe('10');
-    })
-
-    it('Deve retornar "Delivery not found"', async () => {
-        const response = await request(baseUrl).get(`/0`);
-        expect(response.statusCode).toBe(404)
-        expect(response.body.error).toBe('Delivery not found');
-    })
-});
-
-describe('POST / - Criando um rastreio', () => {
-    const newDelivery = {
-        trackingNumber: '10',
-        status: 'Saiu para entrega'
-    }
-
-    afterAll(async () => {
-        await request(baseUrl).delete(`/${newDelivery.trackingNumber}`)
-    })
-
-    it('Deve retornar o objeto criado', async () => {
-        const response = await request(baseUrl).post('/').send(newDelivery)
-        expect(response.statusCode).toBe(200)
-        expect(response.body.trackingNumber).toBe(newDelivery.trackingNumber)
-    })
-
-    it('Deve retornar "Failed to create delivery"', async () => {
-        const response = await request(baseUrl).post('/').send('dados inválidos')
-        expect(response.statusCode).toBe(500)
-        expect(response.body.error).toBe('Failed to create delivery')
-    })
+beforeAll(async () => {
+await request(app).post('/deliveries').send(newDelivery)
 })
 
-describe('/PUT /:trackingNumber - Atualiza as informações do rastreio', () => {
-    const newDelivery = {
-        trackingNumber: '10',
-        status: 'Saiu para entrega'
-    }
+afterAll(async () => {
+await request(app).delete(`/deliveries/${newDelivery.trackingNumber}`)
+})
 
-    const newStatus = {
-        status: 'Entregue'
-    }
+it('Deve retornar o delivery 10', async () => {
+const response = await request(app).get(`/deliveries/${newDelivery.trackingNumber}`);
+expect(response.statusCode).toBe(200)
+expect(response.body.trackingNumber).toBe('10');
+})
 
-    beforeAll(async () => {
-        await request(baseUrl).post('/').send(newDelivery)
-    })
+it('Deve retornar "Delivery not found"', async () => {
+const response = await request(app).get(`/deliveries/0`);
+expect(response.statusCode).toBe(404)
+expect(response.body.error).toBe('Delivery not found');
+})
+});
 
-    afterAll(async () => {
-        await request(baseUrl).delete(`/${newDelivery.trackingNumber}`)
-    })
+describe('/POST DELIVERY', () => {
+const newDelivery = {
+trackingNumber: '10',
+status: 'preparando pedido'
+}
 
-    it('Deve retornar o objeto atualizado', async () => {
-        const response = await request(baseUrl).put(`/${newDelivery.trackingNumber}`).send(newStatus)
-        expect(response.statusCode).toBe(200)
-        expect(response.body.status).toBe(newStatus.status)
-    })
+afterAll(async () => {
+await request(app).delete(`/deliveries/${newDelivery.trackingNumber}`)
+})
 
-    it('Deve retornar "Delivery not found"', async () => {
-        const response = await request(baseUrl).put('/0').send(newStatus.status)
-        expect(response.statusCode).toBe(404)
-        expect(response.body.error).toBe('Delivery not found')
-    })
+it('Deve retornar o objeto criado', async () => {
+const response = await request(app).post('/deliveries').send(newDelivery)
+expect(response.statusCode).toBe(200)
+expect(response.body.trackingNumber).toBe(newDelivery.trackingNumber)
+})
+
+it('Deve retornar "Failed to create delivery"', async () => {
+const response = await request(app).post('/deliveries').send('dados inválidos')
+expect(response.statusCode).toBe(500)
+expect(response.body.error).toBe('Failed to create delivery')
+})
+})
+
+describe('/PUT DELIVERY', () => {
+const newDelivery = {
+trackingNumber: '10',
+status: 'preparando pedido'
+}
+
+const newStatus = {
+status: 'entregue'
+}
+
+beforeAll(async () => {
+await request(app).post('/deliveries').send(newDelivery)
+})
+
+afterAll(async () => {
+await request(app).delete(`/deliveries/${newDelivery.trackingNumber}`)
+})
+
+it('Deve retornar o objeto atualizado', async () => {
+const response = await request(app).put(`/deliveries/${newDelivery.trackingNumber}`).send(newStatus)
+expect(response.statusCode).toBe(200)
+expect(response.body.status).toBe(newStatus.status)
+})
+
+it('Deve retornar "Delivery not found"', async () => {
+const response = await request(app).put('/deliveries/0').send(newStatus.status)
+expect(response.statusCode).toBe(404)
+expect(response.body.error).toBe('Delivery not found')
+})
 })
